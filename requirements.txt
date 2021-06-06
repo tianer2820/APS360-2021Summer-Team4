@@ -1,0 +1,5 @@
+wandb
+torch >= 1.8.0
+torchvision >= 0.9.0
+Pillow >= 8.2.0
+numpy >= 1.20.0
