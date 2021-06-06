@@ -16,4 +16,3 @@ class TestModel(nn.Module):
 if __name__ == "__main__":
     # test
     mymodel = TestModel()
-    
