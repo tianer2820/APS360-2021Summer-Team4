@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": "..\\venv\\Scripts\\python.exe"
+    "python.pythonPath": "..\\venv\\Scripts\\python.exe",
+    "python.linting.cwd": "src",
+    "python.testing.cwd": "src"
 }
