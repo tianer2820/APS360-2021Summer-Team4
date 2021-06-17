@@ -1,27 +1,14 @@
-import wandb
-import os
+from data import get_raw_datasets, split_dataset, ImageDataset
 
-run = wandb.init(project='TestProject', entity="summer2021-aps360-team4")
-try:
-    config = wandb.config
-    config.learning_rate = 0.01
-    config.batch_size = 20
-    config.loss = 'MSE'
-    config.optimizer = 'Adam'
+import torch
+import torch.utils.data
 
-    for i in range(64):
-        wandb.log({"loss": i**2})
+# test code
+comic, pixel = get_raw_datasets()
+comic_train, comic_valid, comic_test = split_dataset(comic)
 
+loader = torch.utils.data.DataLoader(comic_train, batch_size=32)
 
-    for i in range(3):
-        path = os.path.join(wandb.run.dir, "testfile{}.txt".format(i))
-        path = os.path.abspath(path)
-        with open(path, 'w', encoding='utf8') as f:
-            f.write("Hello world!")
-            print(path)
-
-    print("done")
-    run.finish(0)
-except:
-    run.finish(1)
-    raise
+for batch in loader:
+    print(batch.shape)
+    break
