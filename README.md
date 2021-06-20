@@ -9,3 +9,4 @@ https://drive.google.com/file/d/1qDXB5g0Cb0VwISXwnfeiehPHuTgxWhdG/view
 - add Model code
 - prepare dataset
 - write data loader code
+- create a baseline model
