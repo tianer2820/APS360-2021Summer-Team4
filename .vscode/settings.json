@@ -1,11 +1,7 @@
 {
+    "python.linting.flake8Enabled": false,
+    "python.linting.enabled": true,
+    "python.defaultInterpreterPath": "..\\venv\\Scripts\\python.exe",
     "python.pythonPath": "..\\venv\\Scripts\\python.exe",
-    "python.linting.cwd": "baseline_model",
-    "python.testing.cwd": "baseline_model",
-    "terminal.integrated.cwd": "baseline_model",
-    "python.linting.flake8Enabled": true,
-    "python.linting.enabled": false,
-    "python.analysis.completeFunctionParens": true,
-    "python.envFile": "${workspaceFolder}/.env",
-    "git.requireGitUserConfig": false
+    "python.linting.pylintEnabled": true,
 }
