@@ -94,7 +94,7 @@ def style_transfer(content: torch.Tensor, style: torch.Tensor, vgg: nn.Module, e
     return checkpoints
 
 
-def style_transfer_folder(content_folder: str, style_img: str, out_folder: str):
+def style_transfer_folder(content_folder: str, style_img: str, out_folder: str, epochs=4000, checkpoint_freq=1000):
     files = os.listdir(content_folder)
     source_imgs = []
     for file in files:
@@ -103,14 +103,14 @@ def style_transfer_folder(content_folder: str, style_img: str, out_folder: str):
             source_imgs.append(file)
     
     vgg = models.vgg19(pretrained=True).features
-    epochs = 400
+    
 
     # transfer each
     for img_file in source_imgs:
         content = load_image(join(content_folder, img_file))
         style = load_image(style_img, shape=content.shape[-2:])
 
-        imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq=100)
+        imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq)
         for i, img in enumerate(imgs):
             name, ext = os.path.splitext(img_file)
             save_name = '{}_{:0>4}.jpg'.format(name, i)
@@ -122,4 +122,4 @@ if __name__ == "__main__":
     out_path = 'output'
     style_img = './styles/painting.jpg'
     
-    style_transfer_folder(content_path, style_img, out_path)
+    style_transfer_folder(content_path, style_img, out_path, epochs=4000, checkpoint_freq=1000)
