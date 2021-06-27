@@ -12,6 +12,8 @@ from PIL import Image
 from imageio import imwrite
 
 from typing import List
+import os
+join = os.path.join
 
 from data import image_convert, load_image
 from utils import get_feature_output, gram_matrix
@@ -53,7 +55,7 @@ def style_transfer(content: torch.Tensor, style: torch.Tensor, vgg: nn.Module, e
                      'conv5_1': 0.1}
     content_weight = 1
     style_weight = 1e5
-    
+
     optimizer = optim.Adam([target], lr=0.001)
     checkpoints = []
 
@@ -92,17 +94,32 @@ def style_transfer(content: torch.Tensor, style: torch.Tensor, vgg: nn.Module, e
     return checkpoints
 
 
-if __name__ == "__main__":
-    content_path = './images/janelle.png'
-    style_path = './images/Starry-Night-by-Vincent-Van-Gogh-painting.jpg'
-
-    content = load_image(content_path)
-    style = load_image(style_path, shape=content.shape[-2:])
-
+def style_transfer_folder(content_folder: str, style_img: str, out_folder: str):
+    files = os.listdir(content_folder)
+    source_imgs = []
+    for file in files:
+        name, ext = os.path.splitext(file)
+        if ext in ('.jpg', '.png'):
+            source_imgs.append(file)
+    
     vgg = models.vgg19(pretrained=True).features
     epochs = 400
 
-    imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq=100)
-    for i, img in enumerate(imgs):
-        imwrite('./output/content_image{:0>4}.jpg'.format(i), image_convert(img))
+    # transfer each
+    for img_file in source_imgs:
+        content = load_image(join(content_folder, img_file))
+        style = load_image(style_img, shape=content.shape[-2:])
 
+        imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq=100)
+        for i, img in enumerate(imgs):
+            name, ext = os.path.splitext(img_file)
+            save_name = '{}_{:0>4}.jpg'.format(name, i)
+            imwrite(join(out_folder, save_name), image_convert(img))
+
+
+if __name__ == "__main__":
+    content_path = 'images'
+    out_path = 'output'
+    style_img = './styles/painting.jpg'
+    
+    style_transfer_folder(content_path, style_img, out_path)
