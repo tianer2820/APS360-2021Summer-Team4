@@ -11,18 +11,19 @@ from torchvision import models, transforms, utils
 from PIL import Image
 from imageio import imwrite
 
+from typing import List
+
 from data import image_convert, load_image
 from utils import get_feature_output, gram_matrix
 
 
-def style_transfer(content_path: str, style_path: str, vgg: nn.Module, epochs=4000):
+def style_transfer(content: torch.Tensor, style: torch.Tensor, vgg: nn.Module, epochs=4000, checkpoint_freq=500) -> List[torch.Tensor]:
     # select GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
 
-    # load images
-    content = load_image(content_path)
-    style = load_image(style_path, shape=content.shape[-2:])
+    content = content.to(device)
+    style = style.to(device)
 
     # Displaying the images
     # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
@@ -52,8 +53,9 @@ def style_transfer(content_path: str, style_path: str, vgg: nn.Module, epochs=40
                      'conv5_1': 0.1}
     content_weight = 1
     style_weight = 1e5
-    checkpoint = 500
+    
     optimizer = optim.Adam([target], lr=0.001)
+    checkpoints = []
 
     for i in range(epochs):
         current_features = get_feature_output(target, vgg)  # update features
@@ -81,28 +83,26 @@ def style_transfer(content_path: str, style_path: str, vgg: nn.Module, epochs=40
         total_loss.backward()
         optimizer.step()
 
-        # Displaying target image at checkpoints
-        if (i+1) % checkpoint == 0:
+        # log progress
+        if (i+1) % checkpoint_freq == 0:
             print('Total loss: ', total_loss.item())
-            plt.imshow(image_convert(target))
-            plt.show()
+            check = target.cpu().detach()
+            checkpoints.append(check)
 
-    # fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 10))
-    # ax1.imshow(image_convert(content))
-    # ax2.imshow(image_convert(target))
-    # ax3.imshow(image_convert(style))
-
-    # Saving the images
-    imwrite('./output/content_image.jpg', image_convert(content))
-    imwrite('./output/target_image.jpg', image_convert(target))
-    imwrite('./output/style_image.jpg', image_convert(style))
+    return checkpoints
 
 
 if __name__ == "__main__":
     content_path = './images/janelle.png'
     style_path = './images/Starry-Night-by-Vincent-Van-Gogh-painting.jpg'
-    vgg = models.vgg19(pretrained=True).features
-    epochs = 4000
 
-    style_transfer(content_path, style_path, vgg, epochs)
-    
+    content = load_image(content_path)
+    style = load_image(style_path, shape=content.shape[-2:])
+
+    vgg = models.vgg19(pretrained=True).features
+    epochs = 400
+
+    imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq=100)
+    for i, img in enumerate(imgs):
+        imwrite('./output/content_image{:0>4}.jpg'.format(i), image_convert(img))
+
