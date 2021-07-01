@@ -111,6 +111,9 @@ def style_transfer_folder(content_folder: str, style_img: str, out_folder: str, 
         style = load_image(style_img, shape=content.shape[-2:])
 
         imgs = style_transfer(content, style, vgg, epochs, checkpoint_freq)
+
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
         for i, img in enumerate(imgs):
             name, ext = os.path.splitext(img_file)
             save_name = '{}_{:0>4}.jpg'.format(name, i)
@@ -118,8 +121,20 @@ def style_transfer_folder(content_folder: str, style_img: str, out_folder: str, 
 
 
 if __name__ == "__main__":
-    content_path = 'images'
-    out_path = 'output'
-    style_img = './styles/painting.jpg'
+    import os
+
+    file_list = os.listdir('./styles/')
+    style_img_list = []
+    for file in file_list:
+        name, ext = os.path.splitext(file)
+        if ext in ('.png', '.jpg'):
+            style_img_list.append(file)
     
-    style_transfer_folder(content_path, style_img, out_path, epochs=4000, checkpoint_freq=1000)
+    for style_img in style_img_list:
+        name, ext = os.path.splitext(style_img)
+        content_path = 'images'
+        out_path = 'output_{}'.format(name)
+        # style_img = './styles/painting.jpg'
+        style_img = join('./styles/', style_img)
+        
+        style_transfer_folder(content_path, style_img, out_path, epochs=40, checkpoint_freq=10)
