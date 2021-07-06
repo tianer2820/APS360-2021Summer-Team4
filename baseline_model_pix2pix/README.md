@@ -1,3 +1,17 @@
+This is a modified version of
+
+raw data should be place in ./data/dataset_name/XXX.png
+Then run prep_dataset.py to scale and crop the raw images.
+Prepared dataset will be placed in ./data_new/train/XXX.png
+
+`pytorch_pix2pix_train_new.py` is the traing code, `pytorch_pix2pix_test_new.py` is the evaluation code
+
+-----
+
+Below is the original Readme
+
+-----
+
 # pytorch-pix2pix
 Pytorch implementation of pix2pix [1] for various datasets.
 
