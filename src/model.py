@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import tensorflow as tf
 from adain import AdaIN
+
 #requirements:
 #using CNN, AdaIN structure, attention mechanism: https://arxiv.org/pdf/1812.04948.pdf
 #https://github.com/xunhuang1995/AdaIN-style
