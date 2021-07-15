@@ -5,8 +5,9 @@ import torch
 import matplotlib.pyplot as plt
 import torch.optim as optim
 import torch.utils.data
+from torch import nn
 
-def train(G, D, lr=0.002, batch_size=64, num_epochs=20):
+def train(G, D, train_loader, lr=0.002, batch_size=64, num_epochs=20):
 
     rand_size = 100;
 
@@ -23,7 +24,7 @@ def train(G, D, lr=0.002, batch_size=64, num_epochs=20):
     # prepare data loader
     #train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
-    train_loader = get_data_loader()
+    #train_loader = get_data_loader()
 
     # keep track of loss and generated, "fake" samples
     samples = []
@@ -40,7 +41,7 @@ def train(G, D, lr=0.002, batch_size=64, num_epochs=20):
         D.train()
         G.train()
         
-        for batch_i, (real_images, _) in enumerate(train_loader[0]):
+        for batch_i, real_images in enumerate(train_loader):
                     
             batch_size = real_images.size(0)
             
@@ -114,3 +115,5 @@ def train(G, D, lr=0.002, batch_size=64, num_epochs=20):
         plt.show()
     
     return losses
+
+

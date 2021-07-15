@@ -5,8 +5,8 @@ from .dataset import ImageDataset
 
 
 def get_raw_datasets():
-    comic_data = ImageDataset('../data/trainA')
-    pixel_data = ImageDataset('../data/trainB')
+    comic_data = ImageDataset(r'C:\Users\wangy\Desktop\APS360_project_test\APS360-2021Summer-Team4\data_imgs\A')
+    pixel_data = ImageDataset(r'C:\Users\wangy\Desktop\APS360_project_test\APS360-2021Summer-Team4\data_imgs\B')
     return comic_data, pixel_data
 
 
@@ -18,4 +18,8 @@ def split_dataset(dataset):
 
     train_set, valid_set, test_set = torch.utils.data.random_split(dataset, (train, valid, test))
     return train_set, valid_set, test_set
+
+
+
+
 

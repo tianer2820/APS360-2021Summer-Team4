@@ -47,7 +47,8 @@ class ImageDataset:
         full_path = join(self.source_folder, file)
         img = Image.open(full_path)
         img = img.convert('RGB')
-        tensor = torchvision.transforms.F.to_tensor(img)
+        #????
+        tensor = torchvision.transforms.transforms.F.to_tensor(img)
         return tensor
 
 
