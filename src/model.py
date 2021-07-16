@@ -104,17 +104,17 @@ class gen(nn.Module):
 
     def forward(self, x):#Adain for later
         print("before:", x.shape)
-        #x = F.relu (self.conv1(x))
+        x = F.relu (self.conv1(x))
         print("1:", x.shape)
-        #x = F.relu (self.conv2(x))
+        x = F.relu (self.conv2(x))
         print("2:", x.shape)
-        #x = F.relu (self.conv3(x))
+        x = F.relu (self.conv3(x))
         print("3:", x.shape)
-        #x = F.relu (self.tconv3(x))
+        x = F.relu (self.tconv3(x))
         print("4:", x.shape)
-        #x = F.relu (self.tconv2(x))
+        x = F.relu (self.tconv2(x))
         print("5:", x.shape)
-        #x = F.relu (self.tconv1(x))
+        x = F.relu (self.tconv1(x))
         print("6:", x.shape)
         #residual block was added here:
         #x = self.Residual(x)
