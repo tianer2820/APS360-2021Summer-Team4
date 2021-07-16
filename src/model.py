@@ -82,12 +82,12 @@ class ResidualBlock(nn.Module):
 class gen(nn.Module):
     def __init__(self, in_ch):
         super(gen, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels = in_ch, out_channels = 6*in_ch, kernel_size = 3 , stride = 1, padding = 1)
-        self.conv2 = nn.Conv2d(in_channels = 6*in_ch, out_channels = 10*in_ch, kernel_size = 3 , stride = 2, padding = 1)
-        self.conv3 = nn.Conv2d(in_channels = 10*in_ch, out_channels = 25*in_ch, kernel_size = 3,stride = 2, padding = 1)
-        self.tconv3 = nn.ConvTranspose2d(in_channels =25*in_ch, out_channels = 10*in_ch, kernel_size = 3, stride=2, padding=1, output_padding=1) #the decoder part
-        self.tconv2 = nn.ConvTranspose2d(10*in_ch, 6*in_ch, 3, stride=2, padding=1, output_padding=1)
-        self.tconv1 =  nn.ConvTranspose2d(6*in_ch, in_ch, kernel_size = 3, stride=2, padding=1, output_padding=1)
+        self.conv1 = nn.Conv2d(in_ch, 16*in_ch, 3, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(16*in_ch, 64*in_ch, 3, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(64*in_ch, 128*in_ch, 7)
+        self.tconv3 = nn.ConvTranspose2d(128*in_ch, 64*in_ch, 7) #the decoder part
+        self.tconv2 = nn.ConvTranspose2d(64*in_ch, 16*in_ch, 3, stride=2, padding=1, output_padding=1)
+        self.tconv1 =  nn.ConvTranspose2d(16*in_ch, in_ch, 3, stride=2, padding=1, output_padding=1)
         #self.pool = nn.MaxPool2d(kernel_size = 2, stride = 2);
         self.Residual = nn.Sequential(
             nn.ReflectionPad2d(1),
@@ -103,19 +103,19 @@ class gen(nn.Module):
         #discriminator uses a leaky relu which has a small slope for negative values and is usually used for avoid saturation/dominance of noise -> do we need??
 
     def forward(self, x):#Adain for later
-        #print("before:", x.shape)
-        x = F.relu (self.conv1(x))
-        #print("1:", x.shape)
-        x = F.relu (self.conv2(x))
-        #print("2:", x.shape)
-        x = F.relu (self.conv3(x))
-        #print("3:", x.shape)
-        x = F.relu (self.tconv3(x))
-        #print("4:", x.shape)
-        x = F.relu (self.tconv2(x))
-        #print("5:", x.shape)
-        x = F.relu (self.tconv1(x))
-        #print("6:", x.shape)
+        print("before:", x.shape)
+        #x = F.relu (self.conv1(x))
+        print("1:", x.shape)
+        #x = F.relu (self.conv2(x))
+        print("2:", x.shape)
+        #x = F.relu (self.conv3(x))
+        print("3:", x.shape)
+        #x = F.relu (self.tconv3(x))
+        print("4:", x.shape)
+        #x = F.relu (self.tconv2(x))
+        print("5:", x.shape)
+        #x = F.relu (self.tconv1(x))
+        print("6:", x.shape)
         #residual block was added here:
         #x = self.Residual(x)
         #print("res & after:", x.shape)
