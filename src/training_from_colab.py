@@ -176,7 +176,7 @@ def train(G_p2c, D_p2c, G_c2p, D_c2p, loader_Comic, loader_Pixel, lr=0.002, batc
         D_c2p.eval()
         G_p2c.eval()
         D_p2c.eval()
-        test_images = G_c2p(test_noise)  ## why are we plotting noise??????
+        test_images = G_c2p(comic_images)  ## why are we plotting noise??????
         #print(test_images[1:])
         #x = input("wait")
 
@@ -185,6 +185,9 @@ def train(G_p2c, D_p2c, G_c2p, D_c2p, loader_Comic, loader_Pixel, lr=0.002, batc
             plt.subplot(2, 8, k+1)
             #print(test_images[k,:].shape)
             #reconstructing the shape of images:
+            print(test_images.shape)
+            haha = test_images[k,:].data.numpy().swapaxes(0,2)
+            print(haha.shape)
             plt.imshow(test_images[k,:].data.numpy().swapaxes(0,2))
         plt.show()
     

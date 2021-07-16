@@ -19,5 +19,5 @@ Gen_1 = gen(3)
 Dis_1 = dis(3)
 Gen_2 = gen(3)
 Dis_2 = dis(3)
-train(Gen_1, Dis_1,Gen_2, Dis_2, comic_loader,pixel_loader, num_epochs = 5, batch_size = 32)
+train(Gen_1, Dis_1,Gen_2, Dis_2, comic_loader,pixel_loader, num_epochs = 20, batch_size = 32)
 
