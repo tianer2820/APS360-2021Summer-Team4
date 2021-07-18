@@ -92,12 +92,14 @@ if __name__ == '__main__':
     dataset = get_dataset('new_data/train/pixel', 256)
     loader = torch.utils.data.DataLoader(dataset, batch_size=7)
     
-
+    i = 0
     for data in loader:
         print(data)
-        break
-        # img = data[0]
+        img = data[0]
         # img: torch.Tensor
-        # img = TF.to_pil_image(img)
+        img = TF.to_pil_image(img)
         # img: Image.Image
-        # img.save('./save{}.png'.format(i))
+        img.save('./save{}.png'.format(i))
+        i += 1
+        if i >= 20:
+            break
