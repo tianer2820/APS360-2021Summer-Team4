@@ -14,244 +14,257 @@ import torch.utils.data
 
 from dataset_utils import get_dataset, InfinateLoader
 
-config = {
-    'lrD': 0.0002,
-    'lrG': 0.0002,
-    'lambdaA': 10,
-    'lambdaB': 10,
-    'n_resnet': 3, # 9
-    'epochs': 50, # 200
-    'epoch_size': 30, # 300
-    'decay_start': 25, # 100
-    'g_features': 32,
-    'd_features': 64,
-    'img_size': 256,
-    'batch_size': 16,
-    'normalize_img': False,
-    'cuda': True
-}
 
-with wandb.init(project='cycleGan_test', group='test', config=config):
-    config = wandb.config
+def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=50):
 
-    # results save path
-    def ensure_path(path):
-        if not os.path.isdir(path):
-            os.makedirs(path)
+    with wandb.init(project=proj_name, group=proj_group, config=configures):
+        config = wandb.config
 
-    save_root = './save_root'
-    model_path = os.path.join(save_root, 'model')
-    a2b_path = os.path.join(save_root, 'A2B')
-    b2a_path = os.path.join(save_root, 'B2A')
+        # results save path
+        def ensure_path(path):
+            if not os.path.isdir(path):
+                os.makedirs(path)
 
-    ensure_path(save_root)
-    ensure_path(model_path)
-    ensure_path(a2b_path)
-    ensure_path(b2a_path)
+        save_root = './save_root'
+        model_path = os.path.join(save_root, 'model')
+        a2b_path = os.path.join(save_root, 'A2B')
+        b2a_path = os.path.join(save_root, 'B2A')
 
-    # data_loader
+        ensure_path(save_root)
+        ensure_path(model_path)
+        ensure_path(a2b_path)
+        ensure_path(b2a_path)
 
-    dataset_A = get_dataset('new_data/train/photo/', config.img_size, use_normalize=config.normalize_img)
-    dataset_B = get_dataset('new_data/train/pixel/', config.img_size, use_normalize=config.normalize_img)
+        # data_loader
 
-    loader_A = InfinateLoader(torch.utils.data.DataLoader(
-        dataset_A, batch_size=config.batch_size, shuffle=True))
-    loader_B = InfinateLoader(torch.utils.data.DataLoader(
-        dataset_B, batch_size=config.batch_size, shuffle=True))
+        dataset_A = get_dataset('new_data/train/photo/', config.img_size, use_normalize=config.normalize_img)
+        dataset_B = get_dataset('new_data/train/pixel/', config.img_size, use_normalize=config.normalize_img)
+
+        loader_A = InfinateLoader(torch.utils.data.DataLoader(
+            dataset_A, batch_size=config.batch_size, shuffle=True))
+        loader_B = InfinateLoader(torch.utils.data.DataLoader(
+            dataset_B, batch_size=config.batch_size, shuffle=True))
 
 
-    # network
-    G_A = network.generator(input_nc=3, output_nc=3, ngf=config.g_features, nb=config.n_resnet)
-    G_B = network.generator(input_nc=3, output_nc=3, ngf=config.g_features, nb=config.n_resnet)
-    D_A = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
-    D_B = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
-    G_A.weight_init(mean=0.0, std=0.02)
-    G_B.weight_init(mean=0.0, std=0.02)
-    D_A.weight_init(mean=0.0, std=0.02)
-    D_B.weight_init(mean=0.0, std=0.02)
-    G_A.train()
-    G_B.train()
-    D_A.train()
-    D_B.train()
+        # network
+        G_A = network.generator(input_nc=3, output_nc=3, ngf=config.g_features, nb=config.n_resnet)
+        G_B = network.generator(input_nc=3, output_nc=3, ngf=config.g_features, nb=config.n_resnet)
+        D_A = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
+        D_B = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
+        G_A.weight_init(mean=0.0, std=0.02)
+        G_B.weight_init(mean=0.0, std=0.02)
+        D_A.weight_init(mean=0.0, std=0.02)
+        D_B.weight_init(mean=0.0, std=0.02)
+        G_A.train()
+        G_B.train()
+        D_A.train()
+        D_B.train()
 
-    if config.cuda and torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
+        if config.cuda and torch.cuda.is_available():
+            device = torch.device('cuda')
+        else:
+            device = torch.device('cpu')
 
-    G_A.to(device)
-    G_B.to(device)
-    D_A.to(device)
-    D_B.to(device)
+        G_A.to(device)
+        G_B.to(device)
+        D_A.to(device)
+        D_B.to(device)
 
-    print('---------- Networks initialized -------------')
-    util.print_network(G_A)
-    util.print_network(G_B)
-    util.print_network(D_A)
-    util.print_network(D_B)
-    print('-----------------------------------------------')
+        print('---------- Networks initialized -------------')
+        util.print_network(G_A)
+        util.print_network(G_B)
+        util.print_network(D_A)
+        util.print_network(D_B)
+        print('-----------------------------------------------')
 
-    # loss
-    BCE_loss = nn.BCELoss().to(device)
-    MSE_loss = nn.MSELoss().to(device)
-    L1_loss = nn.L1Loss().to(device)
+        # loss
+        BCE_loss = nn.BCELoss().to(device)
+        MSE_loss = nn.MSELoss().to(device)
+        L1_loss = nn.L1Loss().to(device)
 
-    # Adam optimizer
-    G_optimizer = optim.Adam(itertools.chain(
-        G_A.parameters(), G_B.parameters()), lr=config.lrG)
-    D_A_optimizer = optim.Adam(
-        D_A.parameters(), lr=config.lrD)
-    D_B_optimizer = optim.Adam(
-        D_B.parameters(), lr=config.lrD)
+        # Adam optimizer
+        G_optimizer = optim.Adam(itertools.chain(
+            G_A.parameters(), G_B.parameters()), lr=config.lrG)
+        D_A_optimizer = optim.Adam(
+            D_A.parameters(), lr=config.lrD)
+        D_B_optimizer = optim.Adam(
+            D_B.parameters(), lr=config.lrD)
 
-    # image store
-    fakeA_store = util.ImagePool(50)
-    fakeB_store = util.ImagePool(50)
+        # image store
+        fakeA_store = util.ImagePool(50)
+        fakeB_store = util.ImagePool(50)
 
-    wandb.watch((G_A, G_B, D_A, D_B), log_freq=150)
-    print('training start!')
-    start_time = time.time()
+        wandb.watch((G_A, G_B, D_A, D_B), log_freq=150)
+        print('training start!')
+        start_time = time.time()
 
-    for epoch in range(config.epochs):
-        D_A_losses = []
-        D_B_losses = []
-        G_A_losses = []
-        G_B_losses = []
-        A_cycle_losses = []
-        B_cycle_losses = []
+        for epoch in range(config.epochs):
+            D_A_losses = []
+            D_B_losses = []
+            G_A_losses = []
+            G_B_losses = []
+            A_cycle_losses = []
+            B_cycle_losses = []
 
-        epoch_start_time = time.time()
-        num_iter = 0
-        if (epoch+1) > config.decay_start:
-            D_A_optimizer.param_groups[0]['lr'] -= config.lrD / (config.epochs - config.decay_start)
-            D_B_optimizer.param_groups[0]['lr'] -= config.lrD / (config.epochs - config.decay_start)
-            G_optimizer.param_groups[0]['lr'] -= config.lrG / (config.epochs - config.decay_start)
+            epoch_start_time = time.time()
+            num_iter = 0
+            if (epoch+1) > config.decay_start:
+                D_A_optimizer.param_groups[0]['lr'] -= config.lrD / (config.epochs - config.decay_start)
+                D_B_optimizer.param_groups[0]['lr'] -= config.lrD / (config.epochs - config.decay_start)
+                G_optimizer.param_groups[0]['lr'] -= config.lrG / (config.epochs - config.decay_start)
 
-        for iteration in range(config.epoch_size):
-            realA = loader_A.next()
-            realB = loader_B.next()
+            for iteration in range(config.epoch_size):
+                realA = loader_A.next()
+                realB = loader_B.next()
 
-            realA = realA.to(device)
-            realB = realB.to(device)
+                realA = realA.to(device)
+                realB = realB.to(device)
 
-            # train generator G
-            G_optimizer.zero_grad()
+                # train generator G
+                G_optimizer.zero_grad()
 
-            # generate real A to fake B; D_A(G_A(A))
-            fakeB = G_A(realA)
-            D_A_result = D_A(fakeB)
-            G_A_loss = MSE_loss(D_A_result, torch.ones(D_A_result.size()).to(device))
+                # generate real A to fake B; D_A(G_A(A))
+                fakeB = G_A(realA)
+                D_A_result = D_A(fakeB)
+                G_A_loss = MSE_loss(D_A_result, torch.ones(D_A_result.size()).to(device))
 
-            # reconstruct fake B to rec A; G_B(G_A(A))
-            recA = G_B(fakeB)
-            A_cycle_loss = L1_loss(recA, realA) * config.lambdaA
+                # reconstruct fake B to rec A; G_B(G_A(A))
+                recA = G_B(fakeB)
+                A_cycle_loss = L1_loss(recA, realA) * config.lambdaA
 
-            # generate real B to fake A; D_A(G_B(B))
-            fakeA = G_B(realB)
-            D_B_result = D_B(fakeA)
-            G_B_loss = MSE_loss(D_B_result, torch.ones(D_B_result.size()).to(device))
+                # generate real B to fake A; D_A(G_B(B))
+                fakeA = G_B(realB)
+                D_B_result = D_B(fakeA)
+                G_B_loss = MSE_loss(D_B_result, torch.ones(D_B_result.size()).to(device))
 
-            # reconstruct fake A to rec B G_A(G_B(B))
-            recB = G_A(fakeA)
-            B_cycle_loss = L1_loss(recB, realB) * config.lambdaB
+                # reconstruct fake A to rec B G_A(G_B(B))
+                recB = G_A(fakeA)
+                B_cycle_loss = L1_loss(recB, realB) * config.lambdaB
 
-            G_loss = G_A_loss + G_B_loss + A_cycle_loss + B_cycle_loss
-            G_loss.backward()
-            G_optimizer.step()
+                G_loss = G_A_loss + G_B_loss + A_cycle_loss + B_cycle_loss
+                G_loss.backward()
+                G_optimizer.step()
 
-            G_A_losses.append(G_A_loss.item())
-            G_B_losses.append(G_B_loss.item())
-            A_cycle_losses.append(A_cycle_loss.item())
-            B_cycle_losses.append(B_cycle_loss.item())
+                G_A_losses.append(G_A_loss.item())
+                G_B_losses.append(G_B_loss.item())
+                A_cycle_losses.append(A_cycle_loss.item())
+                B_cycle_losses.append(B_cycle_loss.item())
 
-            # train discriminator D_A
-            D_A_optimizer.zero_grad()
+                # train discriminator D_A
+                D_A_optimizer.zero_grad()
 
-            D_A_real = D_A(realB)
-            D_A_real_loss = MSE_loss(D_A_real, torch.ones(D_A_real.size()).to(device))
+                D_A_real = D_A(realB)
+                D_A_real_loss = MSE_loss(D_A_real, torch.ones(D_A_real.size()).to(device))
 
-            # fakeB = fakeB_store.query(fakeB.data)
-            fakeB = fakeB_store.query(fakeB)
-            D_A_fake = D_A(fakeB)
-            D_A_fake_loss = MSE_loss(D_A_fake, torch.zeros(D_A_fake.size()).to(device))
+                # fakeB = fakeB_store.query(fakeB.data)
+                fakeB = fakeB_store.query(fakeB)
+                D_A_fake = D_A(fakeB)
+                D_A_fake_loss = MSE_loss(D_A_fake, torch.zeros(D_A_fake.size()).to(device))
 
-            D_A_loss = (D_A_real_loss + D_A_fake_loss) * 0.5
-            D_A_loss.backward()
-            D_A_optimizer.step()
+                D_A_loss = (D_A_real_loss + D_A_fake_loss) * 0.5
+                D_A_loss.backward()
+                D_A_optimizer.step()
 
-            D_A_losses.append(D_A_loss.item())
+                D_A_losses.append(D_A_loss.item())
 
-            # train discriminator D_B
-            D_B_optimizer.zero_grad()
+                # train discriminator D_B
+                D_B_optimizer.zero_grad()
 
-            D_B_real = D_B(realA)
-            D_B_real_loss = MSE_loss(D_B_real, torch.ones(D_B_real.size()).to(device))
+                D_B_real = D_B(realA)
+                D_B_real_loss = MSE_loss(D_B_real, torch.ones(D_B_real.size()).to(device))
 
-            # fakeA = fakeA_store.query(fakeA.data)
-            fakeA = fakeA_store.query(fakeA)
-            D_B_fake = D_B(fakeA)
-            D_B_fake_loss = MSE_loss(D_B_fake, torch.zeros(D_B_fake.size()).to(device))
+                # fakeA = fakeA_store.query(fakeA.data)
+                fakeA = fakeA_store.query(fakeA)
+                D_B_fake = D_B(fakeA)
+                D_B_fake_loss = MSE_loss(D_B_fake, torch.zeros(D_B_fake.size()).to(device))
 
-            D_B_loss = (D_B_real_loss + D_B_fake_loss) * 0.5
-            D_B_loss.backward()
-            D_B_optimizer.step()
+                D_B_loss = (D_B_real_loss + D_B_fake_loss) * 0.5
+                D_B_loss.backward()
+                D_B_optimizer.step()
 
-            D_B_losses.append(D_B_loss.item())
+                D_B_losses.append(D_B_loss.item())
 
-            num_iter += 1
+                num_iter += 1
 
-        epoch_end_time = time.time()
-        per_epoch_ptime = epoch_end_time - epoch_start_time
+            epoch_end_time = time.time()
+            per_epoch_ptime = epoch_end_time - epoch_start_time
 
-        print(
-            '[%d/%d] - ptime: %.2f, loss_D_A: %.3f, loss_D_B: %.3f, loss_G_A: %.3f, loss_G_B: %.3f, loss_A_cycle: %.3f, loss_B_cycle: %.3f' % (
-                (epoch + 1), config.epochs, per_epoch_ptime,
-                torch.mean(torch.FloatTensor(D_A_losses)),
-                torch.mean(torch.FloatTensor(D_B_losses)),
-                torch.mean(torch.FloatTensor(G_A_losses)),
-                torch.mean(torch.FloatTensor(G_B_losses)),
-                torch.mean(torch.FloatTensor(A_cycle_losses)),
-                torch.mean(torch.FloatTensor(B_cycle_losses))))
+            print(
+                '[%d/%d] - ptime: %.2f, loss_D_A: %.3f, loss_D_B: %.3f, loss_G_A: %.3f, loss_G_B: %.3f, loss_A_cycle: %.3f, loss_B_cycle: %.3f' % (
+                    (epoch + 1), config.epochs, per_epoch_ptime,
+                    torch.mean(torch.FloatTensor(D_A_losses)),
+                    torch.mean(torch.FloatTensor(D_B_losses)),
+                    torch.mean(torch.FloatTensor(G_A_losses)),
+                    torch.mean(torch.FloatTensor(G_B_losses)),
+                    torch.mean(torch.FloatTensor(A_cycle_losses)),
+                    torch.mean(torch.FloatTensor(B_cycle_losses))))
 
-        log_items = {
-            'loss_D_A': torch.mean(torch.FloatTensor(D_A_losses)),
-            'loss_D_B': torch.mean(torch.FloatTensor(D_B_losses)),
-            'loss_G_A': torch.mean(torch.FloatTensor(G_A_losses)),
-            'loss_G_B': torch.mean(torch.FloatTensor(G_B_losses)),
-            'loss_cycle_A': torch.mean(torch.FloatTensor(A_cycle_losses)),
-            'loss_cycle_B': torch.mean(torch.FloatTensor(B_cycle_losses))
-        }
-        wandb.log(log_items)
+            log_items = {
+                'loss_D_A': torch.mean(torch.FloatTensor(D_A_losses)),
+                'loss_D_B': torch.mean(torch.FloatTensor(D_B_losses)),
+                'loss_G_A': torch.mean(torch.FloatTensor(G_A_losses)),
+                'loss_G_B': torch.mean(torch.FloatTensor(G_B_losses)),
+                'loss_cycle_A': torch.mean(torch.FloatTensor(A_cycle_losses)),
+                'loss_cycle_B': torch.mean(torch.FloatTensor(B_cycle_losses))
+            }
+            wandb.log(log_items)
 
-        if (epoch+1) % 1 == 0:
-            # test A to B
-            imagesA = []
-            for i in range(10):
-                img = dataset_A[i]
-                img: torch.Tensor
-                img = img.unsqueeze(0).cpu().detach()
-                imagesA.append(img)
-            imagesA = torch.cat(imagesA, 0)
-            util.save_model_test(imagesA, G_A, G_B, epoch+1, device, a2b_path)
-            # test B to A
-            imagesB = []
-            for i in range(10):
-                img = dataset_B[i]
-                img: torch.Tensor
-                img = img.unsqueeze(0).cpu().detach()
-                imagesB.append(img)
-            imagesB = torch.cat(imagesB, 0)
-            util.save_model_test(imagesB, G_B, G_A, epoch+1, device, b2a_path)
+            if (epoch+1) % test_per_epoch == 0:
+                # test A to B
+                imagesA = []
+                for i in range(10):
+                    img = dataset_A[i]
+                    img: torch.Tensor
+                    img = img.unsqueeze(0).cpu().detach()
+                    imagesA.append(img)
+                imagesA = torch.cat(imagesA, 0)
+                util.save_model_test(imagesA, G_A, G_B, epoch+1, device, a2b_path)
+                # test B to A
+                imagesB = []
+                for i in range(10):
+                    img = dataset_B[i]
+                    img: torch.Tensor
+                    img = img.unsqueeze(0).cpu().detach()
+                    imagesB.append(img)
+                imagesB = torch.cat(imagesB, 0)
+                util.save_model_test(imagesB, G_B, G_A, epoch+1, device, b2a_path)
+            
+            if (epoch+1) % save_per_epoch == 0:
+                torch.save(G_A.state_dict(), os.path.join(model_path, '{:0>4}_generatorA_param.pkl'.format(epoch+1)))
+                torch.save(G_B.state_dict(), os.path.join(model_path, '{:0>4}_generatorB_param.pkl'.format(epoch+1)))
+                torch.save(D_A.state_dict(), os.path.join(model_path, '{:0>4}_discriminatorA_param.pkl'.format(epoch+1)))
+                torch.save(D_B.state_dict(), os.path.join(model_path, '{:0>4}_discriminatorB_param.pkl'.format(epoch+1)))
+
+        end_time = time.time()
+        total_ptime = end_time - start_time
+
+        print("total time: {:.2f}".format(total_ptime))
+
+        print("Training finish!... save training results")
+
+        torch.save(G_A.state_dict(), os.path.join(model_path, 'generatorA_param.pkl'))
+        torch.save(G_B.state_dict(), os.path.join(model_path, 'generatorB_param.pkl'))
+        torch.save(D_A.state_dict(), os.path.join(model_path, 'discriminatorA_param.pkl'))
+        torch.save(D_B.state_dict(), os.path.join(model_path, 'discriminatorB_param.pkl'))
 
 
-    end_time = time.time()
-    total_ptime = end_time - start_time
+if __name__ == "__main__":
+    config = {
+        'lrD': 0.0002,
+        'lrG': 0.0002,
+        'lambdaA': 10,
+        'lambdaB': 10,
+        'n_resnet': 3, # 9
+        'epochs': 50, # 200
+        'epoch_size': 30, # 300
+        'decay_start': 25, # 100
+        'g_features': 32,
+        'd_features': 64,
+        'img_size': 256,
+        'batch_size': 16,
+        'normalize_img': False,
+        'cuda': True
+    }
 
-    print("total time: {:.2f}".format(total_ptime))
-
-    print("Training finish!... save training results")
-
-    torch.save(G_A.state_dict(), os.path.join(model_path, 'generatorA_param.pkl'))
-    torch.save(G_B.state_dict(), os.path.join(model_path, 'generatorB_param.pkl'))
-    torch.save(D_A.state_dict(), os.path.join(model_path, 'discriminatorA_param.pkl'))
-    torch.save(D_B.state_dict(), os.path.join(model_path, 'discriminatorB_param.pkl'))
+    train(configures=config, proj_name='cycleGan_test',
+          proj_group='test', test_per_epoch=10, save_per_epoch=100)
