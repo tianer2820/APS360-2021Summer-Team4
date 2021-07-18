@@ -25,7 +25,11 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
             if not os.path.isdir(path):
                 os.makedirs(path)
 
-        save_root = './save_root'
+        wandb_root = wandb.run.dir
+        if wandb_root == '':
+            save_root = './save_root'
+        else:
+            save_root = os.path.join(wandb_root, './save_root')
         model_path = os.path.join(save_root, 'model')
         a2b_path = os.path.join(save_root, 'A2B')
         b2a_path = os.path.join(save_root, 'B2A')
