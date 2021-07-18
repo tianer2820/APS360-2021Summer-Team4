@@ -27,6 +27,7 @@ config = {
     'd_features': 64,
     'img_size': 256,
     'batch_size': 16,
+    'normalize_img': False,
     'cuda': True
 }
 
@@ -50,8 +51,8 @@ with wandb.init(project='cycleGan_test', group='test', config=config):
 
     # data_loader
 
-    dataset_A = get_dataset('new_data/train/photo/', config.img_size)
-    dataset_B = get_dataset('new_data/train/pixel/', config.img_size)
+    dataset_A = get_dataset('new_data/train/photo/', config.img_size, use_normalize=config.normalize_img)
+    dataset_B = get_dataset('new_data/train/pixel/', config.img_size, use_normalize=config.normalize_img)
 
     loader_A = InfinateLoader(torch.utils.data.DataLoader(
         dataset_A, batch_size=config.batch_size, shuffle=True))
