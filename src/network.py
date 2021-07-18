@@ -45,7 +45,7 @@ class generator(nn.Module):
         x = F.relu(self.deconv1_norm(self.deconv1(x)))
         x = F.relu(self.deconv2_norm(self.deconv2(x)))
         x = F.pad(x, (3, 3, 3, 3), 'reflect')
-        o = F.tanh(self.deconv3(x))
+        o = torch.tanh(self.deconv3(x))
 
         return o
 

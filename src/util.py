@@ -1,15 +1,43 @@
-import itertools, imageio, torch, random
+import itertools, torch, random
 import matplotlib.pyplot as plt
 import numpy as np
-from torchvision import datasets
-from scipy.misc import imresize
+import torchvision.transforms.functional as TF
 from torch.autograd import Variable
+import os
+
+
+def save_model_test(images: torch.Tensor, modelA: torch.nn.Module, modelB: torch.nn.Module,
+               epoch, device, base_path):
+    images = images.to(device)
+
+    realA = images
+    genB = modelA(images)
+    recA = modelB(genB)
+
+    realA = realA.cpu().detach()
+    genB = genB.cpu().detach()
+    recA = recA.cpu().detach()
+
+    batch = images.shape[0]
+
+    for i in range(batch):
+        path = os.path.join(base_path, 'EP{:0>4}_{:0>2}_input.png'.format(epoch, i))
+        img = TF.to_pil_image(realA[i])
+        img.save(path)
+
+        path = os.path.join(base_path, 'EP{:0>4}_{:0>2}_Fake.png'.format(epoch, i))
+        img = TF.to_pil_image(genB[i])
+        img.save(path)
+
+        path = os.path.join(base_path, 'EP{:0>4}_{:0>2}_Recon.png'.format(epoch, i))
+        img = TF.to_pil_image(recA[i])
+        img.save(path)
 
 def show_result(G, x_, y_, num_epoch, show = False, save = False, path = 'result.png'):
     test_images = G(x_)
 
     size_figure_grid = 3
-    fig, ax = plt.subplots(x_.size()[0], size_figure_grid, figsize=(5, 5))
+    fig, ax = plt.subplots(x_.size()[0], size_figure_grid, figsize=(5, 5), squeeze=False)
     for i, j in itertools.product(range(x_.size()[0]), range(size_figure_grid)):
         ax[i, j].get_xaxis().set_visible(False)
         ax[i, j].get_yaxis().set_visible(False)
@@ -32,90 +60,6 @@ def show_result(G, x_, y_, num_epoch, show = False, save = False, path = 'result
         plt.show()
     else:
         plt.close()
-
-def show_train_hist(hist, show = False, save = False, path = 'Train_hist.png'):
-    x = range(len(hist['D_A_losses']))
-
-    y1 = hist['D_A_losses']
-    y2 = hist['D_B_losses']
-    y3 = hist['G_A_losses']
-    y4 = hist['G_B_losses']
-    y5 = hist['A_cycle_losses']
-    y6 = hist['B_cycle_losses']
-
-
-    plt.plot(x, y1, label='D_A_loss')
-    plt.plot(x, y2, label='D_B_loss')
-    plt.plot(x, y3, label='G_A_loss')
-    plt.plot(x, y4, label='G_B_loss')
-    plt.plot(x, y5, label='A_cycle_loss')
-    plt.plot(x, y6, label='B_cycle_loss')
-
-    plt.xlabel('Iter')
-    plt.ylabel('Loss')
-
-    plt.legend(loc=4)
-    plt.grid(True)
-    plt.tight_layout()
-
-    if save:
-        plt.savefig(path)
-
-    if show:
-        plt.show()
-    else:
-        plt.close()
-
-def generate_animation(root, model, opt):
-    images = []
-    for e in range(opt.train_epoch):
-        img_name = root + 'Fixed_results/' + model + str(e + 1) + '.png'
-        images.append(imageio.imread(img_name))
-    imageio.mimsave(root + model + 'generate_animation.gif', images, fps=5)
-
-def data_load(path, subfolder, transform, batch_size, shuffle=False):
-    dset = datasets.ImageFolder(path, transform)
-    ind = dset.class_to_idx[subfolder]
-
-    n = 0
-    for i in range(dset.__len__()):
-        if ind != dset.imgs[n][1]:
-            del dset.imgs[n]
-            n -= 1
-
-        n += 1
-
-    return torch.utils.data.DataLoader(dset, batch_size=batch_size, shuffle=shuffle)
-
-def imgs_resize(imgs, resize_scale = 286):
-    outputs = torch.FloatTensor(imgs.size()[0], imgs.size()[1], resize_scale, resize_scale)
-    for i in range(imgs.size()[0]):
-        img = imresize(imgs[i].numpy(), [resize_scale, resize_scale])
-        outputs[i] = torch.FloatTensor((img.transpose(2, 0, 1).astype(np.float32).reshape(-1, imgs.size()[1], resize_scale, resize_scale) - 127.5) / 127.5)
-
-    return outputs
-
-def random_crop(imgs, crop_size = 256):
-    outputs = torch.FloatTensor(imgs.size()[0], imgs.size()[1], crop_size, crop_size)
-    for i in range(imgs.size()[0]):
-        img = imgs[i]
-        rand1 = np.random.randint(0, imgs.size()[2] - crop_size)
-        rand2 = np.random.randint(0, imgs.size()[2] - crop_size)
-        outputs[i] = img[:, rand1: crop_size + rand1, rand2: crop_size + rand2]
-
-    return outputs
-
-def random_fliplr(imgs):
-    outputs = torch.FloatTensor(imgs.size())
-    for i in range(imgs.size()[0]):
-        if torch.rand(1)[0] < 0.5:
-            img = torch.FloatTensor(
-                (np.fliplr(imgs[i].numpy().transpose(1, 2, 0)).transpose(2, 0, 1).reshape(-1, imgs.size()[1], imgs.size()[2], imgs.size()[3]) + 1) / 2)
-            outputs[i] = (img - 0.5) / 0.5
-        else:
-            outputs[i] = imgs[i]
-
-    return outputs
 
 def print_network(net):
     num_params = 0
