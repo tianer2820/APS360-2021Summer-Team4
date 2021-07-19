@@ -1,5 +1,16 @@
 Codes are modified from https://github.com/znxlwm/pytorch-CycleGAN
 
+TODO:
+- wait for the first training result
+- depending on the result:
+  - normalize input data
+  - prepare better datasets (more related images)
+  - use different initialize method(pre-trained weights)
+  - change activation function (relu->LeakyRelu)
+  - add loss constraints(color consistency, content consistency, clear edges, etc)
+  - adjust layer size and depth.
+
+
 Below is the original readme
 
 
