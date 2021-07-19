@@ -4,6 +4,8 @@ import network
 import util
 import itertools
 import wandb
+import subprocess
+import shutil
 
 import torch
 import torch.nn as nn
@@ -14,6 +16,8 @@ import torch.utils.data
 
 from dataset_utils import get_dataset, InfinateLoader
 
+SAVE_ROOT = 'save_root'
+ZIP_PATH = 'save_root.zip'
 
 def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=50):
 
@@ -25,11 +29,9 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
             if not os.path.isdir(path):
                 os.makedirs(path)
 
-        wandb_root = wandb.run.dir
-        if wandb_root == '':
-            save_root = './save_root'
-        else:
-            save_root = os.path.join(wandb_root, './save_root')
+        
+        save_root = SAVE_ROOT
+        
         model_path = os.path.join(save_root, 'model')
         a2b_path = os.path.join(save_root, 'A2B')
         b2a_path = os.path.join(save_root, 'B2A')
@@ -251,6 +253,14 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
         torch.save(D_A.state_dict(), os.path.join(model_path, 'discriminatorA_param.pkl'))
         torch.save(D_B.state_dict(), os.path.join(model_path, 'discriminatorB_param.pkl'))
 
+        # save zip file
+        process = subprocess.run(['zip', ZIP_PATH, SAVE_ROOT, '-r'])
+        if process.returncode == 0:
+            # successed
+            if wandb.run.dir != '':
+                shutil.copyfile(ZIP_PATH, os.path.join(wandb.run.dir, 'save_root.zip'))
+        else:
+            wandb.alert('Zip Failed!', 'wandb run zip command failed.')
 
 if __name__ == "__main__":
     config = {
