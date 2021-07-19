@@ -1,11 +1,11 @@
 from typing import Callable, Iterable
-import torch
-import torchvision
-import torchvision.transforms.functional as TF
+
 from PIL import Image
 
 import torch
 import torchvision
+import torchvision.transforms.functional as TF
+import torch.nn.functional as NF
 
 from PIL import Image
 import os
@@ -64,15 +64,17 @@ def get_dataset(root_folder, target_size, use_normalize=False):
     random_crop = torchvision.transforms.RandomCrop(
         target_size, pad_if_needed=True)
     random_flip = torchvision.transforms.RandomHorizontalFlip()
-    normalize = torchvision.transforms.Normalize(
-        mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 
     def loader(path: str):
         img = Image.open(path)
         img: Image.Image
         img = img.convert('RGB')
         if use_normalize:
-            return normalize(TF.to_tensor(img))
+            tensor = TF.to_tensor(img).unsqueeze(0)
+            h, w = tensor.shape[2:4]
+            tensor = NF.layer_norm(tensor, [3, h, w]) * 1.5
+            tensor = torch.sigmoid(tensor)
+            return tensor.squeeze(0)
         else:
             return TF.to_tensor(img)
 
