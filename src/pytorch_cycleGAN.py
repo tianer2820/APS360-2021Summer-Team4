@@ -117,7 +117,7 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
                 D_B_optimizer.param_groups[0]['lr'] -= config.lrD / (config.epochs - config.decay_start)
                 G_optimizer.param_groups[0]['lr'] -= config.lrG / (config.epochs - config.decay_start)
 
-            for iteration in range(config.epoch_size):
+            for iteration in range(config.epoch_size // config.batch_size):
                 realA = loader_A.next()
                 realB = loader_B.next()
 
