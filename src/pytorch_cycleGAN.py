@@ -98,7 +98,7 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
         fakeA_store = util.ImagePool(50)
         fakeB_store = util.ImagePool(50)
 
-        wandb.watch((G_A, G_B, D_A, D_B), log_freq=150)
+        wandb.watch((G_A, G_B, D_A, D_B), log_freq=30)
         print('training start!')
         start_time = time.time()
 
@@ -258,10 +258,10 @@ if __name__ == "__main__":
         'lrG': 0.0002,
         'lambdaA': 10,
         'lambdaB': 10,
-        'n_resnet': 3, # 9
-        'epochs': 50, # 200
-        'epoch_size': 30, # 300
-        'decay_start': 25, # 100
+        'n_resnet': 9, # 9
+        'epochs': 200, # 200
+        'epoch_size': 200, # 300
+        'decay_start': 70, # 100
         'g_features': 32,
         'd_features': 64,
         'img_size': 256,
