@@ -1,11 +1,11 @@
 Codes are modified from https://github.com/znxlwm/pytorch-CycleGAN
 
 TODO:
-- wait for the first training result
+- ~~wait for the first training result (done)~~
 - depending on the result:
-  - normalize input data
+  - ~~normalize input data (done)~~
   - prepare better datasets (more related images)
-  - use different initialize method(pre-trained weights)
+  - use different initialize method(pre-trained weights) (doing)
   - change activation function (relu->LeakyRelu)
   - add loss constraints(color consistency, content consistency, clear edges, etc)
   - adjust layer size and depth.
