@@ -35,11 +35,15 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
         model_path = os.path.join(save_root, 'model')
         a2b_path = os.path.join(save_root, 'A2B')
         b2a_path = os.path.join(save_root, 'B2A')
+        pre_a2b_path = os.path.join(save_root, 'pretrain', 'A2B')
+        pre_b2a_path = os.path.join(save_root, 'pretrain', 'B2A')
 
         ensure_path(save_root)
         ensure_path(model_path)
         ensure_path(a2b_path)
         ensure_path(b2a_path)
+        ensure_path(pre_a2b_path)
+        ensure_path(pre_b2a_path)
 
         # data_loader
 
@@ -101,6 +105,76 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
         fakeB_store = util.ImagePool(50)
 
         wandb.watch((G_A, G_B, D_A, D_B), log_freq=30)
+
+        print('pretrain start!')
+        for epoch in range(config.pretrain_epoch):
+            A_losses = []
+            B_losses = []
+
+            epoch_start_time = time.time()
+
+            for iteration in range(config.epoch_size // config.batch_size):
+                realA = loader_A.next()
+                realB = loader_B.next()
+
+                realA = realA.to(device)
+                realB = realB.to(device)
+
+                # train generator G
+                G_optimizer.zero_grad()
+
+                # generate real A to fake B; D_A(G_A(A))
+                fakeB = G_A(realA)
+                A_loss = L1_loss(fakeB, realA)
+
+                # generate real B to fake A; D_A(G_B(B))
+                fakeA = G_B(realB)
+                B_loss = L1_loss(fakeA, realB)
+
+                G_loss = A_loss + B_loss
+                G_loss.backward()
+                G_optimizer.step()
+
+                A_losses.append(A_loss.item())
+                B_losses.append(B_loss.item())
+
+            epoch_end_time = time.time()
+            per_epoch_ptime = epoch_end_time - epoch_start_time
+
+            print(
+                '[{}/{}] - ptime: {:.2f}, loss_A: {:.3f}, loss_B: {:.3f}'.format(
+                    (epoch + 1), config.pretrain_epoch, per_epoch_ptime,
+                    torch.mean(torch.FloatTensor(A_losses)),
+                    torch.mean(torch.FloatTensor(B_losses))
+                    )
+                )
+
+            log_items = {
+                'pretrain_lossA': torch.mean(torch.FloatTensor(A_losses)),
+                'pretrain_lossB': torch.mean(torch.FloatTensor(B_losses))
+            }
+            wandb.log(log_items)
+
+            if (epoch+1) % test_per_epoch == 0:
+                # test A to B
+                imagesA = []
+                for i in range(10):
+                    img = dataset_A[i]
+                    img: torch.Tensor
+                    img = img.unsqueeze(0).cpu().detach()
+                    imagesA.append(img)
+                imagesA = torch.cat(imagesA, 0)
+                util.save_model_test(imagesA, G_A, G_B, epoch+1, device, pre_a2b_path)
+                # test B to A
+                imagesB = []
+                for i in range(10):
+                    img = dataset_B[i]
+                    img: torch.Tensor
+                    img = img.unsqueeze(0).cpu().detach()
+                    imagesB.append(img)
+                imagesB = torch.cat(imagesB, 0)
+                util.save_model_test(imagesB, G_B, G_A, epoch+1, device, pre_b2a_path)
+
         print('training start!')
         start_time = time.time()
 
@@ -269,6 +343,7 @@ if __name__ == "__main__":
         'lambdaA': 10,
         'lambdaB': 10,
         'n_resnet': 9, # 9
+        'pretrain_epoch': 50,
         'epochs': 200, # 200
         'epoch_size': 200, # 300
         'decay_start': 70, # 100
@@ -276,9 +351,9 @@ if __name__ == "__main__":
         'd_features': 64,
         'img_size': 256,
         'batch_size': 16,
-        'normalize_img': False,
+        'normalize_img': True,
         'cuda': True
     }
 
     train(configures=config, proj_name='cycleGan_test',
-          proj_group='test', test_per_epoch=10, save_per_epoch=100)
+          proj_group='test2', test_per_epoch=10, save_per_epoch=100)

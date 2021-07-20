@@ -276,7 +276,7 @@ if __name__ == "__main__":
         'd_features': 64,
         'img_size': 256,
         'batch_size': 16,
-        'normalize_img': False,
+        'normalize_img': True,
         'cuda': True
     }
 

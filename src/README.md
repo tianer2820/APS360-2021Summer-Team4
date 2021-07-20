@@ -1,5 +1,8 @@
 Codes are modified from https://github.com/znxlwm/pytorch-CycleGAN
 
+experiment 1: the original cycleGAN
+experiment 2: cycleGAN with pre-train
+
 TODO:
 - ~~wait for the first training result (done)~~
 - depending on the result:
