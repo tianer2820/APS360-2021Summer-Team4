@@ -6,19 +6,25 @@ from torch.autograd import Variable
 import os
 
 
-def save_model_test(images: torch.Tensor, modelA: torch.nn.Module, modelB: torch.nn.Module,
-               epoch, device, base_path):
-    images = images.to(device)
+def save_model_test(images: torch.Tensor,
+                    E_A: torch.nn.Module,
+                    E_B: torch.nn.Module,
+                    G_A: torch.nn.Module,
+                    G_B: torch.nn.Module,
+                    epoch, device, base_path):
+    with torch.no_grad():
+        images = images.to(device)
 
-    realA = images
-    genB = modelA(images)
-    recA = modelB(genB)
+        realA = images
+        latentA = E_A(images)
+        genB = G_B(latentA)
+        recA = G_A(latentA)
 
-    realA = realA.cpu().detach()
-    genB = genB.cpu().detach()
-    recA = recA.cpu().detach()
+        realA = realA.cpu().detach()
+        genB = genB.cpu().detach()
+        recA = recA.cpu().detach()
 
-    batch = images.shape[0]
+        batch = images.shape[0]
 
     for i in range(batch):
         path = os.path.join(base_path, 'EP{:0>4}_{:0>2}_input.png'.format(epoch, i))
