@@ -266,6 +266,8 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
                 util.save_model_test(imagesB, E_B, E_A, G_B, G_A, epoch+1, device, b2a_path)
             
             if (epoch+1) % save_per_epoch == 0:
+                torch.save(E_A.state_dict(), os.path.join(model_path, '{:0>4}_encoderA_param.pkl'.format(epoch+1)))
+                torch.save(E_B.state_dict(), os.path.join(model_path, '{:0>4}_encoderB_param.pkl'.format(epoch+1)))
                 torch.save(G_A.state_dict(), os.path.join(model_path, '{:0>4}_generatorA_param.pkl'.format(epoch+1)))
                 torch.save(G_B.state_dict(), os.path.join(model_path, '{:0>4}_generatorB_param.pkl'.format(epoch+1)))
                 torch.save(D_A.state_dict(), os.path.join(model_path, '{:0>4}_discriminatorA_param.pkl'.format(epoch+1)))
@@ -278,6 +280,8 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
 
         print("Training finish!... save training results")
 
+        torch.save(E_A.state_dict(), os.path.join(model_path, 'encoderA_param.pkl'))
+        torch.save(E_B.state_dict(), os.path.join(model_path, 'encoderB_param.pkl'))
         torch.save(G_A.state_dict(), os.path.join(model_path, 'generatorA_param.pkl'))
         torch.save(G_B.state_dict(), os.path.join(model_path, 'generatorB_param.pkl'))
         torch.save(D_A.state_dict(), os.path.join(model_path, 'discriminatorA_param.pkl'))
