@@ -7,11 +7,12 @@ TODO:
 - ~~wait for the first training result (done)~~
 - depending on the result:
   - ~~normalize input data (done)~~
-  - prepare better datasets (more related images)
-  - use different initialize method(pre-trained weights) (doing)
+  - ~~prepare better datasets (more related images) (done)~~
+  - ~~use different initialize method(pre-trained weights) (done)~~
   - change activation function (relu->LeakyRelu)
   - add loss constraints(color consistency, content consistency, clear edges, etc)
   - adjust layer size and depth.
+  - use simple UNIT structure
 
 
 Below is the original readme
