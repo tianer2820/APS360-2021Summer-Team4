@@ -1,0 +1,4 @@
+/data/
+/new_data/
+/*.pkl
+/wandb/
