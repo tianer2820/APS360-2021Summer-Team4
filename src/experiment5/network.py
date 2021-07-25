@@ -85,7 +85,8 @@ class Generator(nn.Module):
     def _concat_noise(x):
         shape = list(x.shape)
         shape[1] = 1
-        rand = torch.randn(shape)
+        device = x.device
+        rand = torch.randn(shape).to(device)
         x = torch.cat([x, rand], 1)
         return x
 
@@ -145,7 +146,7 @@ class resnet_block(nn.Module):
         x = F.pad(x, (self.padding, self.padding, self.padding, self.padding), 'reflect')
         shape = list(x.shape)
         shape[1] = 1
-        rand = torch.randn(shape)
+        rand = torch.randn(shape).to(x.device)
         x = torch.cat([x, rand], 1)
         x = self.conv2_norm(self.conv2(x))
 
