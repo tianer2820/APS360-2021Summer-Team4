@@ -19,7 +19,7 @@ from dataset_utils import get_dataset, InfinateLoader
 SAVE_ROOT = 'save_root'
 ZIP_PATH = 'save_root.zip'
 
-def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=50):
+def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=50, continue_train=False):
 
     with wandb.init(project=proj_name, group=proj_group, config=configures):
         config = wandb.config
@@ -64,12 +64,26 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
         D_A = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
         D_B = network.discriminator(input_nc=3, output_nc=1, ndf=config.d_features)
         
-        E_A.weight_init(mean=0.0, std=0.02)
-        E_B.weight_init(mean=0.0, std=0.02) 
-        G_A.weight_init(mean=0.0, std=0.02)
-        G_B.weight_init(mean=0.0, std=0.02)
-        D_A.weight_init(mean=0.0, std=0.02)
-        D_B.weight_init(mean=0.0, std=0.02)
+        if continue_train:
+            E_A_state_dict = torch.load(os.path.join(model_path, 'encoderA_param.pkl'))
+            E_B_state_dict = torch.load(os.path.join(model_path, 'encoderB_param.pkl'))
+            G_A_state_dict = torch.load(os.path.join(model_path, 'generatorA_param.pkl'))
+            G_B_state_dict = torch.load(os.path.join(model_path, 'generatorB_param.pkl'))
+            D_A_state_dict = torch.load(os.path.join(model_path, 'discriminatorA_param.pkl'))
+            D_B_state_dict = torch.load(os.path.join(model_path, 'discriminatorB_param.pkl'))
+            E_A.load_state_dict(E_A_state_dict)
+            E_B.load_state_dict(E_B_state_dict)
+            G_A.load_state_dict(G_A_state_dict)
+            G_B.load_state_dict(G_B_state_dict)
+            D_A.load_state_dict(D_A_state_dict)
+            D_B.load_state_dict(D_B_state_dict)
+        else:
+            E_A.weight_init(mean=0.0, std=0.02)
+            E_B.weight_init(mean=0.0, std=0.02) 
+            G_A.weight_init(mean=0.0, std=0.02)
+            G_B.weight_init(mean=0.0, std=0.02)
+            D_A.weight_init(mean=0.0, std=0.02)
+            D_B.weight_init(mean=0.0, std=0.02)
 
         E_A.train()
         E_B.train()
@@ -297,6 +311,8 @@ def train(configures, proj_name, proj_group, test_per_epoch=10, save_per_epoch=5
             wandb.alert('Zip Failed!', 'wandb run zip command failed.')
 
 if __name__ == "__main__":
+    CONTINUE_TRAINING = True
+
     config = {
         'lrD': 0.0002,
         'lrG': 0.0002,
@@ -305,7 +321,7 @@ if __name__ == "__main__":
         'n_resnet': 6, # 6, for each side(encoder and decoder)
         'epochs': 200, # 200
         'epoch_size': 500, # 500
-        'decay_start': 200, # 100
+        'decay_start': 100, # 100
         'g_features': 32, # 32
         'd_features': 72, # 72
         'img_size': 256,
@@ -315,5 +331,9 @@ if __name__ == "__main__":
         'cuda': False
     }
 
+    if CONTINUE_TRAINING:
+        config['lrD'] *= 0.2
+        config['lrG'] *= 0.2
+
     train(configures=config, proj_name='cycleGan_test',
-          proj_group='experiment5', test_per_epoch=10, save_per_epoch=50)
+          proj_group='experiment5', test_per_epoch=10, save_per_epoch=50, continue_train=CONTINUE_TRAINING)
