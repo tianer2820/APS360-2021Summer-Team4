@@ -1,11 +1,7 @@
 import os
-import time
 import network
 import util
-import itertools
-import wandb
-import subprocess
-import shutil
+
 
 import torch
 import torch.nn as nn
@@ -17,9 +13,7 @@ import torch.utils.data
 from dataset_utils import get_dataset, InfinateLoader
 
 
-
-
-def eval(save_root, batch_size=5, use_cuda=True):
+def eval(save_root, batch_size=5, use_cuda=True, only_first_N=20):
 
     config = {
     'n_resnet': 5,
@@ -51,8 +45,8 @@ def eval(save_root, batch_size=5, use_cuda=True):
 
     # data_loader
 
-    dataset_A = get_dataset('new_data/train/photo/', config.img_size, use_normalize=config.normalize_img)
-    dataset_B = get_dataset('new_data/train/pixel/', config.img_size, use_normalize=config.normalize_img)
+    dataset_A = get_dataset('new_data/train/photo/', config['img_size'], use_normalize=config['normalize_img'])
+    dataset_B = get_dataset('new_data/train/pixel/', config['img_size'], use_normalize=config['normalize_img'])
 
 
     # network
@@ -98,19 +92,25 @@ def eval(save_root, batch_size=5, use_cuda=True):
     print('---------- Networks initialized -------------')
 
     # test A to B
-    loader_A = InfinateLoader(torch.utils.data.DataLoader(
-        dataset_A, batch_size=batch_size, shuffle=False))
+    print('evaluating A2B...')
+    loader_A = torch.utils.data.DataLoader(dataset_A, batch_size=batch_size, shuffle=False)
     for i, imgsA in enumerate(loader_A):
         util.save_model_test(imgsA, E_A, E_B, G_A, G_B, i, device, a2b_path)
+        print(i)
+        if i * batch_size > only_first_N:
+            break
 
     # test B to A
-    loader_B = InfinateLoader(torch.utils.data.DataLoader(
-        dataset_B, batch_size=batch_size, shuffle=False))
+    print('evaluating B2A...')
+    loader_B = torch.utils.data.DataLoader(dataset_B, batch_size=batch_size, shuffle=False)
     for i, imgsB in enumerate(loader_B):
         util.save_model_test(imgsB, E_B, E_A, G_B, G_A, i, device, b2a_path)
+        print(i)
+        if i * batch_size > only_first_N:
+            break
 
 
 if __name__ == "__main__":
     SAVE_ROOT = 'save_root'
 
-    eval('save_root', batch_size=4, use_cuda=False)
+    eval('save_root', batch_size=4, use_cuda=False, only_first_N=20)
