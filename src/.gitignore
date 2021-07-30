@@ -3,3 +3,5 @@
 /*.pkl
 /wandb/
 /data_horse2zebra/
+/eval_data/
+/eval_data2/

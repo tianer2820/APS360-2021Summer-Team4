@@ -13,20 +13,14 @@ import torch.utils.data
 from dataset_utils import get_dataset, InfinateLoader
 
 
-def eval(save_root, batch_size=5, use_cuda=True, only_first_N=20):
+def eval(model_folder, out_folder, batch_size=5, use_cuda=True, only_first_N=20):
 
     config = {
     'n_resnet': 5,
-    'epochs': 200, # 200
-    'epoch_size': 500, # 500
-    'decay_start': 100, # 100
     'g_features': 32,
     'd_features': 64,
     'img_size': 256,
-    'batch_size': 6, # 6
     'normalize_img': True,
-    'full_cycle_loss': True,
-    'cuda': True
     }
 
     # results save path
@@ -34,19 +28,19 @@ def eval(save_root, batch_size=5, use_cuda=True, only_first_N=20):
         if not os.path.isdir(path):
             os.makedirs(path)
     
-    model_path = os.path.join(save_root, 'model')
-    a2b_path = os.path.join(save_root, 'A2B')
-    b2a_path = os.path.join(save_root, 'B2A')
+    model_path = model_folder
+    a2b_path = os.path.join(out_folder, 'A2B')
+    b2a_path = os.path.join(out_folder, 'B2A')
 
-    ensure_path(save_root)
+    ensure_path(out_folder)
     ensure_path(model_path)
     ensure_path(a2b_path)
     ensure_path(b2a_path)
 
     # data_loader
 
-    dataset_A = get_dataset('new_data/train/photo/', config['img_size'], use_normalize=config['normalize_img'])
-    dataset_B = get_dataset('new_data/train/pixel/', config['img_size'], use_normalize=config['normalize_img'])
+    dataset_A = get_dataset('../eval_data2/train/photo/', config['img_size'], use_normalize=config['normalize_img'])
+    dataset_B = get_dataset('../eval_data2/train/pixel/', config['img_size'], use_normalize=config['normalize_img'])
 
 
     # network
@@ -113,4 +107,4 @@ def eval(save_root, batch_size=5, use_cuda=True, only_first_N=20):
 if __name__ == "__main__":
     SAVE_ROOT = 'save_root'
 
-    eval('save_root', batch_size=4, use_cuda=False, only_first_N=20)
+    eval('models', 'eval_out', batch_size=4, use_cuda=False, only_first_N=20)
