@@ -43,7 +43,7 @@ def save_model_test(images: torch.Tensor,
         img.save(path)
 
 
-def eval(normalize_input=True, use_cuda=True, only_first_N=None):
+def eval(normalize_input=True, use_cuda=True, only_first_N=None, blur_size=0):
 
     config = {
     'n_resnet': 5,
@@ -59,9 +59,9 @@ def eval(normalize_input=True, use_cuda=True, only_first_N=None):
     ensure_path(b2a_path)
 
     # data_loader
-    dataset_A = get_dataset(PHOTO_FOLDER, config['img_size'], use_normalize=normalize_input)
-    dataset_B = get_dataset(PIXEL_FOLDER, config['img_size'], use_normalize=normalize_input)
-
+    dataset_A = get_dataset(PHOTO_FOLDER, config['img_size'], use_normalize=normalize_input, blur_size=blur_size)
+    dataset_B = get_dataset(PIXEL_FOLDER, config['img_size'], use_normalize=normalize_input, blur_size=blur_size)
+    # dataset_B = get_dataset(PIXEL_FOLDER, config['img_size'], use_normalize=normalize_input)
 
     # network
     E_A = network.Encoder(input_nc=3, output_nc=3, ngf=config['g_features'], nb=config['n_resnet'])
@@ -121,4 +121,4 @@ def eval(normalize_input=True, use_cuda=True, only_first_N=None):
                 break
 
 if __name__ == "__main__":
-    eval(normalize_input=False, use_cuda=False, only_first_N=20)
+    eval(normalize_input=False, use_cuda=False, only_first_N=None, blur_size=3)

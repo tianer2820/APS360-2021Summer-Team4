@@ -59,7 +59,7 @@ class ImageDataset:
         return transformed
 
 
-def get_dataset(folder, target_size, use_normalize=True):
+def get_dataset(folder, target_size, use_normalize=True, blur_size=0):
 
     def loader(path: str):
         img = Image.open(path)
@@ -77,6 +77,8 @@ def get_dataset(folder, target_size, use_normalize=True):
     def transform(tensor: torch.Tensor):
         tensor = TF.resize(tensor, target_size)
         # tensor = TF.resize(tensor, (target_size, target_size))
+        if blur_size > 0:
+            tensor = TF.gaussian_blur(tensor, [blur_size, blur_size])
         return tensor
 
     dataset = ImageDataset(folder, loader=loader, transform=transform)
